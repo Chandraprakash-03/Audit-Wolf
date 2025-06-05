@@ -1,3 +1,4 @@
+import { ethers } from 'ethers';
 import { callAI } from '../services/aiService.js';
 import { uploadToIPFS } from '../services/ipfsService.js';
 import { sendToBlockchain } from '../services/blockchainService.js';
@@ -15,7 +16,7 @@ export const auditCode = async (req, res) => {
 export const storeAudit = async (req, res) => {
     const { wallet, code, auditText } = req.body;
     try {
-        const fileHash = ethers.utils.keccak256(Buffer.from(code));
+        const fileHash = ethers.keccak256(Buffer.from(code));
         const ipfsHash = await uploadToIPFS(auditText);
         const tx = await sendToBlockchain(wallet, fileHash, ipfsHash);
         res.json({ tx });
