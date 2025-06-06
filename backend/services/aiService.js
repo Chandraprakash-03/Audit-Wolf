@@ -2,12 +2,13 @@ import axios from 'axios';
 
 const MODEL_ROUTER = {
     light: "meta-llama/llama-4-maverick:free",
-    medium: "qwen/qwen3-14b:free",
+    // medium: "qwen/qwen3-14b:free",
+    medium: "meta-llama/llama-4-maverick:free",
     coder: "qwen/qwen-2.5-coder-32b-instruct:free",
     long: "deepseek/deepseek-v3-base:free"
 };
 
-function chooseModel(code) {
+export function chooseModel(code) {
     const lineCount = code.split('\n').length;
     if (lineCount < 100) return MODEL_ROUTER.light;
     if (lineCount < 300) return MODEL_ROUTER.medium;
@@ -18,15 +19,15 @@ function chooseModel(code) {
 export const callAI = async (code) => {
     const model = chooseModel(code);
     const prompt = `Audit the following Solidity contract and return a list of vulnerabilities with severity and line number:\n\n${code}
-Respond ONLY with valid JSON in this format:
-[
-  {
-    "severity": "critical | high | medium | low",
-    "line": number,
-    "issue": "Brief summary",
-    "recommendation": "Mitigation steps"
-  }
-]
+        Respond ONLY with valid JSON in this format:
+        [
+        {
+            "severity": "critical | high | medium | low",
+            "line": number,
+            "issue": "Brief summary",
+            "recommendation": "Mitigation steps"
+        },
+        ]
 `;
 
     try {
@@ -40,10 +41,13 @@ Respond ONLY with valid JSON in this format:
             }
         });
 
+        console.log("AI response:", res);
+
         let raw = res.data.choices[0].message.content;
-        raw = raw.replace(/^```json/, '').replace(/^```/, '').replace(/```$/, '').trim();
+        raw = raw.replace(/```json|```/g, '').trim();
 
         try {
+            console.log("AI reply:", raw);
             return JSON.parse(raw);
         } catch (err) {
             console.error("Failed to parse JSON from model:", err);
