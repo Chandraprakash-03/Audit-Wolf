@@ -2,8 +2,10 @@ import { ethers } from 'ethers';
 import { supabase } from '../db/supabase.js';
 import { v4 as uuidv4 } from 'uuid';
 import { chooseModel, callAI } from '../services/aiService.js';
-import { uploadToIPFS } from '../services/ipfsService.js';
-import { sendToBlockchain } from '../services/blockchainService.js';
+import { storeAuditHelper } from '../utils/storeAuditHelper.js';
+import { generateAuditPDF } from '../utils/pdfHelper.js';
+import { sendAuditReportEmail } from '../services/emailService.js';
+
 
 export const auditCode = async (req, res) => {
     const { code } = req.body;
@@ -15,14 +17,14 @@ export const auditCode = async (req, res) => {
     }
 };
 export const startAuditHandler = async (req, res) => {
-    const { wallet, code } = req.body;
+    const { wallet, code, email } = req.body;
     const model = chooseModel(code);
     const id = uuidv4();
     const codeHash = ethers.keccak256(ethers.toUtf8Bytes(code));
 
     // Insert audit entry
     const { data, error } = await supabase.from('Audit').insert([
-        { id, wallet, codeHash, model, status: 'pending' }
+        { id, wallet, codeHash, model, status: 'pending', email }
     ]);
 
     if (error) {
@@ -49,6 +51,22 @@ export const startAuditHandler = async (req, res) => {
                 } else {
                     console.log("✅ Updated audit:", id);
                 }
+                if (email) {
+                    try {
+                        const pdfPath = await generateAuditPDF(id, result);
+                        await sendAuditReportEmail(email, id, pdfPath);
+                        console.log(`📬 Email sent to ${email} with PDF audit`);
+                    } catch (err) {
+                        console.error("❌ Failed to generate/send PDF email:", err.message);
+                    }
+                }
+
+                await storeAuditHelper({
+                    id,
+                    wallet,
+                    code,
+                    auditText: JSON.stringify(result),
+                });
             } catch (err) {
                 await supabase.from('Audit').update({
                     status: 'error'
@@ -71,6 +89,23 @@ export const startAuditHandler = async (req, res) => {
             } else {
                 console.log("✅ Updated audit:", id);
             }
+            if (email) {
+                try {
+                    const parsedResult = typeof result === 'string' ? JSON.parse(result) : result;
+                    const pdfPath = await generateAuditPDF(id, parsedResult);
+                    await sendAuditReportEmail(email, id, pdfPath);
+                    console.log(`📬 Email sent to ${email} with PDF audit`);
+                } catch (err) {
+                    console.error("❌ Failed to generate/send PDF email:", err.message);
+                }
+            }
+
+            await storeAuditHelper({
+                id,
+                wallet,
+                code,
+                auditText: JSON.stringify(result),
+            });
         } catch (err) {
             console.error("AI audit failed:", err);
             await supabase.from('Audit').update({
@@ -84,11 +119,9 @@ export const startAuditHandler = async (req, res) => {
 
 
 export const storeAudit = async (req, res) => {
-    const { wallet, code, auditText } = req.body;
+    const { id, wallet, code, auditText } = req.body;
     try {
-        const fileHash = ethers.keccak256(Buffer.from(code));
-        const ipfsHash = await uploadToIPFS(auditText);
-        const tx = await sendToBlockchain(wallet, fileHash, ipfsHash);
+        const tx = await storeAuditHelper({ id, wallet, code, auditText });
         res.json({ tx });
     } catch (err) {
         res.status(500).json({ error: 'Blockchain write failed', details: err.message });

@@ -10,14 +10,17 @@ const MODEL_ROUTER = {
 
 export function chooseModel(code) {
     const lineCount = code.split('\n').length;
-    if (lineCount < 100) return MODEL_ROUTER.light;
+    if (lineCount < 100) return MODEL_ROUTER.medium;
     if (lineCount < 300) return MODEL_ROUTER.medium;
-    if (lineCount < 800) return MODEL_ROUTER.coder;
-    return MODEL_ROUTER.long;
+    if (lineCount < 800) return MODEL_ROUTER.medium;
+    return MODEL_ROUTER.medium;
 }
 
 export const callAI = async (code) => {
     const model = chooseModel(code);
+    const provider = {
+        'sort': 'latency'
+    }
     const prompt = `Audit the following Solidity contract and return a list of vulnerabilities with severity and line number:\n\n${code}
         Respond ONLY with valid JSON in this format:
         [
@@ -33,6 +36,7 @@ export const callAI = async (code) => {
     try {
         const res = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
             model,
+            provider,
             messages: [{ role: "user", content: prompt }],
         }, {
             headers: {
@@ -48,7 +52,7 @@ export const callAI = async (code) => {
 
         try {
             console.log("AI reply:", raw);
-            return JSON.parse(raw);
+            return raw;
         } catch (err) {
             console.error("Failed to parse JSON from model:", err);
             console.log("AI reply:", raw);
