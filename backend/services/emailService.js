@@ -11,7 +11,7 @@ const transporter = nodemailer.createTransport({
 
 export const sendAuditReportEmail = async (to, auditId, pdfPath) => {
     const mailOptions = {
-        from: `"noreply@Audit Wolf"`,
+        from: `'Wolf'`,
         to,
         subject: `Audit Report - ${auditId}`,
         text: `Your smart contract audit is complete. Attached is the report for audit ID: ${auditId}`,

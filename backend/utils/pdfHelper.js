@@ -3,13 +3,13 @@ import fs from 'fs';
 import path from 'path';
 
 export const generateAuditPDF = async (auditId, auditJson) => {
-    if (typeof auditJson === 'string') {
-        auditJson = JSON.parse(auditJson);
-    }
+  if (typeof auditJson === 'string') {
+    auditJson = JSON.parse(auditJson);
+  }
 
-    const filePath = path.resolve(`./reports/audit-${auditId}.pdf`);
+  const filePath = path.resolve(`./audit-${auditId}.pdf`);
 
-    const htmlContent = `
+  const htmlContent = `
     <html>
     <head>
       <style>
@@ -32,11 +32,11 @@ export const generateAuditPDF = async (auditId, auditJson) => {
     </html>
   `;
 
-    const browser = await puppeteer.launch({ headless: true });
-    const page = await browser.newPage();
-    await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
-    await page.pdf({ path: filePath, format: 'A4' });
-    await browser.close();
+  const browser = await puppeteer.launch({ headless: true });
+  const page = await browser.newPage();
+  await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+  await page.pdf({ path: filePath, format: 'A4' });
+  await browser.close();
 
-    return filePath;
+  return filePath;
 };
