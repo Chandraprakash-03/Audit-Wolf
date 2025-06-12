@@ -5,6 +5,10 @@ import { startAuditHandler, auditCode, storeAudit, getAuditPDF, getDashboardData
 
 const router = express.Router();
 
+router.get('/test', () => {
+    res.json({ message: 'Audit API is working!' });
+})
+
 router.post('/audit', startAuditHandler);
 // router.post('/audit', auditCode);
 router.post('/store', storeAudit);
