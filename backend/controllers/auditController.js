@@ -190,7 +190,7 @@ export const getDashboardData = async (req, res) => {
             .from('Audit')
             .select('id, wallet, status, createdAt, auditJson, gasOptimizations')
             .eq('email', email)
-            .eq('status', 'completed' || 'processing')
+            // .eq('status', 'completed' || 'processing' || 'error')
             .order('createdAt', { ascending: false });
 
         if (data.length === 0) {
@@ -200,5 +200,18 @@ export const getDashboardData = async (req, res) => {
         res.json({ data });
     } catch (err) {
         res.status(500).json({ error: 'Failed to fetch dashboard data', details: err.message });
+    }
+}
+
+export const getAuditById = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const { data, error } = await supabase.from('Audit').select('*').eq('id', id).single();
+        if (error) {
+            return res.status(404).json({ error: 'Audit not found', details: error.message });
+        }
+        return res.json(data);
+    } catch (err) {
+        return res.status(500).json({ error: 'Failed to fetch audit', details: err.message });
     }
 }
