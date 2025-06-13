@@ -1,11 +1,11 @@
 import express from 'express';
 import { supabase } from '../db/supabase.js';
-import { startAuditHandler, auditCode, storeAudit, getAuditPDF, getDashboardData } from '../controllers/auditController.js';
+import { startAuditHandler, auditCode, storeAudit, getAuditPDF, getDashboardData, getAuditById } from '../controllers/auditController.js';
 
 
 const router = express.Router();
 
-router.get('/test', () => {
+router.get('/test', (req, res) => {
     res.json({ message: 'Audit API is working!' });
 })
 
@@ -31,5 +31,7 @@ router.get('/status/:id', async (req, res) => {
 router.get('/audit/report/:id/pdf', getAuditPDF);
 
 router.get('/user-audits/:email', getDashboardData)
+
+router.get('/audit/report/:id', getAuditById)
 
 export default router;
