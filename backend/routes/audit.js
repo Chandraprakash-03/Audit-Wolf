@@ -1,6 +1,7 @@
 import express from 'express';
 import { supabase } from '../db/supabase.js';
-import { startAuditHandler, auditCode, storeAudit } from '../controllers/auditController.js';
+import { startAuditHandler, auditCode, storeAudit, getAuditPDF, getDashboardData } from '../controllers/auditController.js';
+
 
 const router = express.Router();
 
@@ -23,5 +24,8 @@ router.get('/status/:id', async (req, res) => {
     res.json(data);
 });
 
+router.get('/audit/report/:id/pdf', getAuditPDF);
+
+router.get('/user-audits/:email', getDashboardData)
 
 export default router;
