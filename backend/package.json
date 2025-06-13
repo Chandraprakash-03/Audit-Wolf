@@ -24,6 +24,7 @@
     "prettier": "^3.5.3",
     "prisma": "^6.9.0",
     "puppeteer": "^24.10.0",
-    "uuid": "^11.1.0"
+    "uuid": "^11.1.0",
+    "zcatalyst-sdk-node": "^3.0.0"
   }
 }
